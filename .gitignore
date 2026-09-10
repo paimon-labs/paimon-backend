@@ -34,3 +34,7 @@ rags/
 .vscode/
 .idea/
 .DS_Store
+
+# models
+models/*.onnx
+models/*.bin
