@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# DB / local data (deployments keep their own DB/memory/RAGs out of source)
+*.sqlite3
+*.db
+data/
+memory/
+rags/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
