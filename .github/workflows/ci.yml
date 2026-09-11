@@ -22,10 +22,18 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --all-extras --dev || echo "no pyproject.toml yet"
+        run: uv sync --all-extras --dev
 
       - name: Lint (ruff)
-        run: uv run ruff check . || true   # remove `|| true` once the codebase exists
+        run: uv run ruff check .
 
       - name: Test (pytest)
-        run: uv run pytest || true   # remove `|| true` once tests exist
+        run: uv run pytest -q
+
+  deploy:
+    needs: lint-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
