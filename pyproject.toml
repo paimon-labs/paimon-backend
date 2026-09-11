@@ -16,6 +16,7 @@ dependencies = [
     "edge-tts>=6.1.0",
     "kokoro-onnx>=0.4.9",
     "soundfile>=0.12.1",
+    "motor>=3.6.0",
     "tenacity>=9.0.0",
 ]
 
@@ -24,6 +25,7 @@ dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "ruff>=0.7.0",
+    "httpx2>=2.0.0",
 ]
 
 [tool.ruff]
@@ -37,6 +39,11 @@ ignore = ["B008"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+filterwarnings = [
+    # Starlette's own TestClient internals use a deprecated anyio alias —
+    # third-party code, not ours to fix. Everything else still surfaces.
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning:starlette.testclient",
+]
 
 [build-system]
 requires = ["hatchling"]

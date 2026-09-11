@@ -1,5 +1,8 @@
 """
 Sakshi (साक्षी) — event recording, the Logger, the observability
-canvas's data source. Not yet implemented (Phase 2 — stand this up
-early once the rest of Phase 1/2 foundation is in place).
+canvas's data source.
+
+`logger.py` (Phase 2): the write path — `record_event()`, used by
+other modules as they act. The canvas itself (reading and rendering
+this data) is Phase 3.
 """

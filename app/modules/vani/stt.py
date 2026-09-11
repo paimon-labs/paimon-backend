@@ -1,19 +1,22 @@
 """
 Vani — Speech to Text.
 
-Implements a hybrid STT engine pattern utilizing async `httpx` and running 
-through Vani's shared ProviderChain (see providers/base.py) for an async-first
-backend.
+Migrated from Whisperlay's `engine/hybrid_engine.py` (HybridEngine).
+Same hybrid pattern, same fallback triggers, same models — ported from
+sync `requests` + a standalone class to async `httpx` running through
+Vani's shared ProviderChain (see providers/base.py), since the rest of
+this backend is async-first. Behaviour is otherwise unchanged:
 
-Features:
   - Primary: Groq's whisper-large-v3-turbo (cloud)
   - Fallback: faster-whisper "small", CPU, int8 (local)
-  - Falls back on: missing key, 401/403, 429, any other non-200 status code,
-    or a network/timeout error.
+  - Falls back on: missing key, 401/403, 429, any other non-200, or a
+    network/timeout error — exactly the triggers from the original.
 
-Groq is NOT retried before falling back — a failed Groq request triggers
-an immediate fallback to local processing. The shared ProviderChain's retry 
-knob is set to 1 for the Groq provider to enforce this behavior.
+Unlike the original, Groq is NOT retried before falling back — a
+failed Groq request means "fall through now", matching how
+HybridEngine.transcribe() behaved (single attempt, immediate
+fallback). The shared ProviderChain's retry knob is set to 1 for the
+Groq provider to preserve that.
 """
 
 from __future__ import annotations
@@ -26,7 +29,7 @@ from pathlib import Path
 import httpx
 
 from app.core.config import get_settings
-from app.modules.vani.providers.base import Provider, ProviderChain
+from app.core.providers import Provider, ProviderChain
 
 settings = get_settings()
 logger = logging.getLogger("paimon.vani.stt")

@@ -1,11 +1,12 @@
 """
-Shared provider-fallback/retry logic for Vani (STT + TTS).
+Shared provider-fallback/retry logic.
 
-Both STT and TTS follow the same shape: try a primary (usually cloud)
-provider, retry it a bounded number of times, and fall through to the
-next provider in the chain (usually local) if it keeps failing. This
-module is the one place that logic lives, so STT and TTS don't
-duplicate it (per Phase 1 of the project plan).
+The pattern is the same everywhere it's used: try a primary provider,
+retry it a bounded number of times, and fall through to the next
+provider in the chain if it keeps failing. Originally built for Vani
+(STT: Groq -> local faster-whisper; TTS: edge-tts -> local Kokoro),
+and reused as-is by Narada (LLM: NVIDIA build -> Groq -> local Ollama)
+rather than re-deriving the same retry/fallback logic per module.
 """
 
 from __future__ import annotations
@@ -16,7 +17,8 @@ from dataclasses import dataclass
 
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-logger = logging.getLogger("paimon.vani")
+logger = logging.getLogger("paimon.providers")
+
 
 
 @dataclass
@@ -45,8 +47,9 @@ class ProviderChain[T]:
     failures per-provider, and falls through to the next provider on
     exhaustion rather than failing the whole request outright.
 
-    Used identically by STT (cloud whisper-large-v3 -> local faster-whisper) and
-    TTS (cloud egde-tts-> local kokoro-onnx).
+    Used identically by STT (cloud Groq -> local faster-whisper), TTS
+    (cloud edge-tts -> local Kokoro), and Narada's LLM chain (NVIDIA
+    build -> Groq -> local Ollama).
     """
 
     def __init__(self, name: str, providers: list[Provider[T]]):
@@ -67,13 +70,13 @@ class ProviderChain[T]:
             )(provider.call)
 
             try:
-                logger.info("vani.%s: trying provider=%s", self.name, provider.name)
+                logger.info("%s: trying provider=%s", self.name, provider.name)
                 result = await wrapped(*args, **kwargs)
-                logger.info("vani.%s: provider=%s succeeded", self.name, provider.name)
+                logger.info("%s: provider=%s succeeded", self.name, provider.name)
                 return result
             except Exception as exc:  # noqa: BLE001 — deliberate: this is the fallback boundary
                 logger.warning(
-                    "vani.%s: provider=%s exhausted retries, falling through: %s",
+                    "%s: provider=%s exhausted retries, falling through: %s",
                     self.name,
                     provider.name,
                     exc,

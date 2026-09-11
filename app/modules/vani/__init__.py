@@ -1,4 +1,4 @@
 """
-Vani (वाणी — voice) — STT/TTS. Implements the hybrid cloud + local pattern
-and provides both STT and TTS capabilities for the backend.
+Vani (वाणी — voice) — STT/TTS. Migrated in from Whisperlay as the
+hybrid cloud + local pattern; extended with a matching TTS module.
 """

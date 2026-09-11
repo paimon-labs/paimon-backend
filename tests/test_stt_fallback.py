@@ -1,5 +1,5 @@
 """
-Verifies the fallback behaviour from whisper-large-v3 to faster-whisper on failure:
+Verifies the migrated fallback behaviour from Whisperlay's HybridEngine:
 if Groq fails (no key configured, in this test), Vani falls through to
 the local faster-whisper provider rather than raising.
 

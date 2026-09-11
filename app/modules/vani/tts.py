@@ -22,7 +22,7 @@ import tempfile
 from pathlib import Path
 
 from app.core.config import get_settings
-from app.modules.vani.providers.base import Provider, ProviderChain
+from app.core.providers import Provider, ProviderChain
 
 settings = get_settings()
 logger = logging.getLogger("paimon.vani.tts")

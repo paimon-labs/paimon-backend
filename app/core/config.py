@@ -30,7 +30,18 @@ class Settings(BaseSettings):
     tts_kokoro_lang: str = "en-us"
     tts_kokoro_speed: float = 1.0
 
-    # Provider fallback behaviour (shared by STT + TTS chains)
+    # Manas — MongoDB Atlas (structured + vector + episodic, one cluster)
+    mongodb_uri: str | None = None
+    mongodb_db_name: str = "paimon"
+
+    # Narada — LLM provider chain (NVIDIA build -> Groq -> local Ollama)
+    nvidia_api_key: str | None = None
+    nvidia_llm_model: str = "meta/llama-3.1-70b-instruct"
+    groq_llm_model: str = "openai/gpt-oss-120b"
+    local_llm_base_url: str = "http://localhost:11434/v1"
+    local_llm_model: str = "llama3.2"
+
+    # Provider fallback behaviour (shared by STT + TTS + LLM chains)
     provider_max_retries: int = 2
     provider_retry_backoff_seconds: float = 1.5
 
