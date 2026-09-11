@@ -8,6 +8,7 @@ from app.core import db
 from app.core.config import get_settings
 from app.modules import tattva  # noqa: F401 — import registers built-in tools
 from app.modules.narada.router import router as narada_router
+from app.modules.sakshi.router import router as sakshi_router
 from app.modules.tattva.router import router as tattva_router
 from app.modules.vani.router import router as vani_router
 
@@ -32,6 +33,7 @@ app = FastAPI(
 app.include_router(vani_router)
 app.include_router(narada_router)
 app.include_router(tattva_router)
+app.include_router(sakshi_router)
 
 
 @app.get("/health")

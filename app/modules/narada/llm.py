@@ -1,17 +1,22 @@
 """
 Narada — LLM provider chain.
 
-All three providers speak the OpenAI-compatible chat-completions wire
+All four providers speak the OpenAI-compatible chat-completions wire
 format, so one request function serves all of them (DRY where it
 actually earns its place — same shape, same parsing, just a different
 base URL and key each time).
 
   - Primary: NVIDIA build (integrate.api.nvidia.com) — broadest model
-    catalog of the three, includes genuine Llama weights.
+    catalog of the four, includes genuine Llama weights.
   - Fallback: Groq (api.groq.com) — fast, cheap. Groq deprecated its
     literal "llama-*" model IDs in 2026; the current recommended
     open-weight replacement is the gpt-oss family, used here by
     default.
+  - Fallback: Gemini (generativelanguage.googleapis.com) — Google's
+    free-tier Flash/Flash-Lite models via their OpenAI-compatible
+    endpoint. Note: enabling billing on the same GCP project this key
+    belongs to deletes that project's free tier entirely, so keep it
+    on its own project if you want paid Gemini features later.
   - Local fallback: Ollama, running on this box/VPS. The model is NOT
     auto-pulled — run `ollama pull <model>` yourself first (see
     .env.example). Kept as a last resort, not a true offline path:
@@ -19,10 +24,12 @@ base URL and key each time).
     resilience, since Narada itself only runs when the VPS is
     reachable in the first place.
 
-This is a fixed 3-provider chain for now — the plan's full dynamic
+This is a fixed 4-provider chain for now — the plan's full dynamic
 task->AI priority table (built up per task type, with manual override
 syntax) is a Phase 3 concern layered on top of this, not replaced by
-it.
+it. Note that table's DEFAULT_ORDER is derived from this chain's
+provider names at import time, so adding/removing a provider here is
+the only change needed — priority.py doesn't need touching.
 """
 
 from __future__ import annotations
@@ -90,6 +97,17 @@ async def _call_groq(messages: list[dict], **_kwargs) -> str:
     )
 
 
+async def _call_gemini(messages: list[dict], **_kwargs) -> str:
+    if not settings.gemini_api_key:
+        raise RuntimeError("GEMINI_API_KEY not configured")
+    return await _call_openai_compatible(
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai",
+        model=settings.gemini_llm_model,
+        messages=messages,
+        api_key=settings.gemini_api_key,
+    )
+
+
 async def _call_local_ollama(messages: list[dict], **_kwargs) -> str:
     return await _call_openai_compatible(
         base_url=settings.local_llm_base_url,
@@ -104,13 +122,17 @@ llm_chain = ProviderChain(
     providers=[
         Provider(name="nvidia-build", call=_call_nvidia, retries=1),
         Provider(name="groq", call=_call_groq, retries=1),
+        Provider(name="gemini", call=_call_gemini, retries=1),
         Provider(name="local-ollama", call=_call_local_ollama, retries=1),
     ],
 )
 
 
-async def complete(messages: list[dict]) -> str:
-    """Public entrypoint: OpenAI-style messages in, assistant text out."""
+async def complete(messages: list[dict], provider_order: list[str] | None = None) -> str:
+    """Public entrypoint: OpenAI-style messages in, assistant text out.
+    `provider_order` lets a caller (Narada's priority table, a manual
+    @provider override) try providers in a different sequence for this
+    call without touching the default chain."""
     if not messages:
         raise ValueError("messages cannot be empty")
-    return await llm_chain.run(messages)
+    return await llm_chain.run(messages, order=provider_order)

@@ -58,10 +58,27 @@ class ProviderChain[T]:
         self.name = name
         self.providers = providers
 
-    async def run(self, *args, **kwargs) -> T:
+    async def run(self, *args, order: list[str] | None = None, **kwargs) -> T:
+        """
+        Run the chain. By default uses self.providers in their fixed
+        order. Pass `order` (a list of provider names) to try them in
+        a different sequence for this call only — e.g. Narada's
+        priority table reordering by task type, or a manual
+        `@provider` override picking one specific provider. Unknown
+        names in `order` are ignored; providers not mentioned in
+        `order` are NOT dropped, just appended after it, so a partial
+        override still falls through to the rest of the chain.
+        """
+        providers = self.providers
+        if order:
+            by_name = {p.name: p for p in self.providers}
+            ordered = [by_name[name] for name in order if name in by_name]
+            remaining = [p for p in self.providers if p.name not in set(order)]
+            providers = ordered + remaining
+
         errors: dict[str, Exception] = {}
 
-        for provider in self.providers:
+        for provider in providers:
             wrapped = retry(
                 stop=stop_after_attempt(provider.retries),
                 wait=wait_exponential(multiplier=provider.backoff_seconds, min=1, max=10),

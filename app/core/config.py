@@ -34,10 +34,12 @@ class Settings(BaseSettings):
     mongodb_uri: str | None = None
     mongodb_db_name: str = "paimon"
 
-    # Narada — LLM provider chain (NVIDIA build -> Groq -> local Ollama)
+    # Narada — LLM provider chain (NVIDIA build -> Groq -> Gemini -> local Ollama)
     nvidia_api_key: str | None = None
     nvidia_llm_model: str = "meta/llama-3.1-70b-instruct"
     groq_llm_model: str = "openai/gpt-oss-120b"
+    gemini_api_key: str | None = None
+    gemini_llm_model: str = "gemini-2.5-flash"
     local_llm_base_url: str = "http://localhost:11434/v1"
     local_llm_model: str = "llama3.2"
 
