@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     # Narada — LLM provider chain (NVIDIA build -> Groq -> Gemini -> local Ollama)
     nvidia_api_key: str | None = None
-    nvidia_llm_model: str = "meta/llama-3.1-70b-instruct"
+    nvidia_llm_model: str = "meta/llama-3.3-70b-instruct"
     groq_llm_model: str = "openai/gpt-oss-120b"
     gemini_api_key: str | None = None
     gemini_llm_model: str = "gemini-2.5-flash"
